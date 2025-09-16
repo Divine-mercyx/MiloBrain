@@ -99,3 +99,44 @@ If a name is used (e.g., "send to Alex"), you MUST look it up in the contact lis
         });
     }
 };
+
+
+export const routerResponse = async (req, res) => {
+    try {
+        const { prompt } = req.body;
+        if (!prompt || typeof prompt !== 'string') {
+            return res.status(400).send({ error: "Invalid request: 'prompt' must be a string." });
+        }
+        const routerPrompt = `
+  You are an intent classification system. Analyze the user's message and determine if it is a COMMAND or a QUESTION.
+
+  # INTENT DEFINITIONS:
+  - "command": The user wants to PERFORM AN ACTION or TRANSACTION (send, receive, swap, check balance, stake, mint, etc.)
+  - "question": The user is asking for INFORMATION, EXPLANATION, or HELP (what, how, why, when, where, etc.)
+
+  # INSTRUCTIONS:
+  1. Analyze the user's message regardless of language
+  2. Focus on the ACTION vs INFORMATION intent
+  3. Ignore grammar, spelling, or language errors
+  4. Respond with ONLY valid JSON: { "intent": "command" | "question" }
+
+  User's message: "${prompt}"
+  `;
+        const result = await model.generateContent(routerPrompt);
+        const response = await result.response;
+        const text = response.text().replace(/```json|```/g, '').trim();
+        const { intent } = JSON.parse(text);
+
+        res.send(JSON.stringify(intent), {
+            'Content-Type': 'application/json',
+            status: 200
+        });
+
+    } catch (error) {
+        console.error("Router error in /api/response:", error);
+        res.status(500).send({
+            action: "error",
+            message: "An internal server error occurred in the router. Please try again later."
+        });
+    }
+}
