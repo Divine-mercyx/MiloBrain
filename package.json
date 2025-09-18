@@ -1,7 +1,6 @@
 {
   "name": "miloaibackend",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./server.js",
@@ -18,9 +17,20 @@
     "fastify": "^5.6.0",
     "fastify-cors": "^6.1.0",
     "fastify-multipart": "^5.4.0",
-    "fastify-static": "^4.7.0"
+    "fastify-static": "^4.7.0",
+    "node-cache": "^5.1.2",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Divine-mercyx/MiloBrain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Divine-mercyx/MiloBrain/issues"
+  },
+  "homepage": "https://github.com/Divine-mercyx/MiloBrain#readme",
+  "description": ""
 }
