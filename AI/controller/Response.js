@@ -42,7 +42,8 @@ If a name is used (e.g., "send to Alex"), you MUST look it up in the contact lis
   "asset": "SUI",       // << This stays in English, it's a ticker symbol
   "amount": "5",        // << This is a number
   "recipient": "0x..."  // << This is a hex address
-}
+  "reply": "Sending 5 SUI to Jacob. Sign transaction to continue." // << This is a human-readable confirmation
+ }
 
 ## 2. VIEW BALANCE (Query)
 - Intent: User asks about their portfolio or balance.
@@ -58,7 +59,8 @@ If a name is used (e.g., "send to Alex"), you MUST look it up in the contact lis
   "action": "swap",         // << This stays in English
   "fromAsset": "SUI",       // << This stays in English
   "toAsset": "USDC",        // << This stays in English
-  "amount": "5"             // << This is a number
+  "amount": "5",            // << This is a number
+  "reply": "Swapping SUI to USDC. Sign transaction to continue." // << This is a human-readable confirmation
 }
 
 ## 4. ERROR HANDLING
