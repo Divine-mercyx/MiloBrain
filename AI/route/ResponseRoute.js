@@ -1,4 +1,4 @@
-import {response, routerResponse} from "../controller/Response.js";
+// import {response, routerResponse} from "../controller/Response.js";
 import {POST} from "../response/route.js";
 
 export default async function responseRoute(fastify, options) {
