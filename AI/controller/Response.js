@@ -110,26 +110,55 @@ export const routerResponse = async (req, res) => {
             return res.status(400).send({ error: "Invalid request: 'prompt' must be a string." });
         }
         const routerPrompt = `
-  You are an intent classification system. Analyze the user's message and determine if it is a COMMAND or a QUESTION.
+You are an intent classification and response system for a Sui-based assistant.
 
-  # INTENT DEFINITIONS:
-  - "command": The user wants to PERFORM AN ACTION or TRANSACTION (send, receive, swap, check balance, stake, mint, etc.)
-  - "question": The user is asking for INFORMATION, EXPLANATION, or HELP (what, how, why, when, where, etc.)
+# INTENT DEFINITIONS:
+- "command": The user wants to PERFORM AN ACTION or TRANSACTION (send, receive, swap, check balance, stake, mint, etc.)
+- "question": The user is asking for INFORMATION, EXPLANATION, or HELP (what, how, why, when, where, etc.)
+- "casual": The user is greeting you, making small talk, or saying something friendly or non-transactional (e.g. "hi", "how are you", "what's up", "gm", "lol", etc.)
 
-  # INSTRUCTIONS:
-  1. Analyze the user's message regardless of language
-  2. Focus on the ACTION vs INFORMATION intent
-  3. Ignore grammar, spelling, or language errors
-  4. Respond with ONLY valid JSON: { "intent": "command" | "question" }
+# INSTRUCTIONS:
+1. Analyze the user's message regardless of language.
+2. Focus on the ACTION vs INFORMATION vs CASUAL intent.
+3. Ignore grammar, spelling, or language errors.
+4. Respond with ONLY valid JSON. No markdown, no extra text.
 
-  User's message: "${prompt}"
-  `;
+# OUTPUT RULES:
+- If the intent is "command", respond with:
+{
+  "intent": "command",
+}
+
+- If the intent is "question" AND it is related to Sui (e.g. news, updates, price, roadmap, team, etc.), respond with:
+{
+  "intent": "question",
+  "reply": "Sui is a fast, object-based Layer 1 blockchain designed for scalability and user-friendly apps."
+}
+
+- If the intent is "question" and NOT related to Sui, respond with:
+{
+  "intent": "question",
+  "reply": "This question is outside my scope. I can only help with Sui-related commands."
+}
+
+- If the intent is "casual", respond with:
+{
+  "intent": "casual",
+  "reply": "Hey there! I'm Milo, your Sui assistant. Ready when you are ✨"
+}
+
+
+# USER'S MESSAGE:
+"${prompt}"
+`;
+
+
         const result = await model.generateContent(routerPrompt);
         const response = await result.response;
         const text = response.text().replace(/```json|```/g, '').trim();
-        const { intent } = JSON.parse(text);
+        const reply = JSON.parse(text);
 
-        res.send(JSON.stringify(intent), {
+        res.send(reply, {
             'Content-Type': 'application/json',
             status: 200
         });
