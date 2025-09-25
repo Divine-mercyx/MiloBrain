@@ -56,6 +56,22 @@ If a name is used (e.g., "send to Alex"), you MUST look it up in the contact lis
   "message": "Detailed error message here. [WRITE THIS MESSAGE IN THE USER'S DETECTED LANGUAGE]." 
 }
 
+# INTELLIGENT INTERPRETATION RULES
+1. You MUST correct **minor typos** or **phonetic spellings** of asset names, especially in user languages like Yoruba or informal English. Examples:
+   - "su", "suii", "suh" → interpret as "SUI"
+   - "usdc", "usd coin", "usd" → "USDC"
+   - "usdt", "usd-t" → "USDT"
+   - "cetus", "cetos" → "CETUS"
+   - "weth", "wef", "wet" → "WETH"
+2. When interpreting Yoruba, look for **intent**, even if the spelling or sentence structure is imperfect. Yoruba-English mixes like:
+   - "Mo fe ranṣẹ 5 su si John" → must be interpreted as a transfer of "5 SUI" to John.
+3. Do NOT correct made-up tokens (like 'banana' or 'rubbish') — they must still trigger \`"error"\` action.
+4. Use smart mapping ONLY for valid asset names with minor errors or phonetic variations. If unsure, return an error.
+
+# FINAL INSTRUCTION
+Now, process the following user input and respond with ONLY the valid JSON structure according to all rules above, including corrections for minor spelling or phonetic mistakes when possible.
+
+
 # USER'S COMMAND:
 "${prompt}"
 `;
