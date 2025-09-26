@@ -13,3 +13,4 @@ const genAI = new GoogleGenerativeAI(apiKey);
 // Export configured models
 export const routerModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 export const commandModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+export const transcribeModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
