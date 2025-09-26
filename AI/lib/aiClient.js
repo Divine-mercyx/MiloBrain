@@ -11,5 +11,5 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey);
 
 // Export configured models
-export const routerModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+export const routerModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 export const commandModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
