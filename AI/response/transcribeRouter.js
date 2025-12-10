@@ -1,4 +1,5 @@
-import { transcribeModel } from "../lib/aiClient.js";
+import { transcribeModel, aiProvider } from "../lib/aiClient.js";
+import { parseGeminiResponse } from "../lib/utils.js";
 
 export async function transcribe(request, reply) {
     try {

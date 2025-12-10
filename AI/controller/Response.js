@@ -1,13 +1,118 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 dotenv.config();
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-    throw new Error("The GOOGLE_API_KEY environment variable is not set.");
+// Check for API keys
+const geminiApiKeys = process.env.GEMINI_API_KEYS ? process.env.GEMINI_API_KEYS.split(',') : 
+                     process.env.GEMINI_API_KEY ? [process.env.GEMINI_API_KEY] : [];
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+
+// Track current API key index for rotation
+let currentGeminiKeyIndex = 0;
+
+// Function to get current Gemini API key
+function getCurrentGeminiKey() {
+    if (geminiApiKeys.length === 0) return null;
+    return geminiApiKeys[currentGeminiKeyIndex];
 }
-const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+
+// Function to rotate to next Gemini API key
+function rotateGeminiKey() {
+    if (geminiApiKeys.length > 1) {
+        currentGeminiKeyIndex = (currentGeminiKeyIndex + 1) % geminiApiKeys.length;
+        console.log(`Rotating to Gemini API key ${currentGeminiKeyIndex + 1}/${geminiApiKeys.length}`);
+        return true;
+    }
+    return false;
+}
+
+// Initialize the appropriate AI provider
+let aiProvider = 'gemini'; // default
+let model = null;
+
+if (anthropicApiKey) {
+    // Use Claude if Anthropic API key is available
+    aiProvider = 'claude';
+    const anthropic = new Anthropic({
+        apiKey: anthropicApiKey
+    });
+    
+    // Create a wrapper to match Gemini's API
+    model = {
+        generateContent: async (prompt) => {
+            let actualPrompt = prompt;
+            if (typeof prompt === 'object' && prompt.contents) {
+                // Handle Gemini-style prompts
+                actualPrompt = prompt.contents[0].parts.find(part => part.text)?.text || '';
+            } else if (typeof prompt === 'string') {
+                actualPrompt = prompt;
+            }
+            
+            const message = await anthropic.messages.create({
+                model: "claude-3-5-sonnet-20251022",
+                max_tokens: 1000,
+                messages: [{ role: "user", content: actualPrompt }]
+            });
+            
+            return {
+                response: Promise.resolve({
+                    text: () => message.content[0].text
+                })
+            };
+        }
+    };
+} else if (geminiApiKeys.length > 0) {
+    // Use Gemini with API key rotation
+    aiProvider = 'gemini';
+    
+    // Create a wrapper that handles API key rotation
+    model = {
+        generateContent: async (prompt) => {
+            let lastError;
+            let attempts = 0;
+            const maxAttempts = geminiApiKeys.length || 1;
+            
+            while (attempts < maxAttempts) {
+                try {
+                    const currentKey = getCurrentGeminiKey();
+                    if (!currentKey) {
+                        throw new Error("No valid Gemini API key available");
+                    }
+                    
+                    const genAI = new GoogleGenerativeAI(currentKey);
+                    const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+                    return await geminiModel.generateContent(prompt);
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Gemini API key ${currentGeminiKeyIndex + 1} failed:`, error.message);
+                    
+                    // If it's an authentication error, rotate to the next key
+                    if (error.message.includes('API_KEY_INVALID') || error.message.includes('401')) {
+                        if (rotateGeminiKey()) {
+                            attempts++;
+                            continue; // Try with the next key
+                        } else {
+                            break; // No more keys to try
+                        }
+                    } else {
+                        // For non-authentication errors, don't rotate
+                        break;
+                    }
+                }
+            }
+            
+            // If we get here, all keys have failed
+            throw lastError || new Error("All Gemini API keys failed");
+        }
+    };
+    
+    console.log(`AI Controller initialized with Gemini using ${geminiApiKeys.length} API keys`);
+} else {
+    throw new Error("Either GEMINI_API_KEYS or ANTHROPIC_API_KEY environment variable must be set.");
+}
+
+console.log(`AI Controller initialized with provider: ${aiProvider}`);
 
 export const response = async (req, res) => {
     try {
@@ -81,8 +186,14 @@ If a name is used (e.g., "send to Alex"), you MUST look it up in the contact lis
 
         let parsedResponse;
         try {
-            const jsonString = responseText.replace(/```json|```/g, '').trim();
-            parsedResponse = JSON.parse(jsonString);
+            // Use appropriate parser based on provider
+            if (aiProvider === 'claude') {
+                const jsonString = responseText.replace(/```json|```/g, '').trim();
+                parsedResponse = JSON.parse(jsonString);
+            } else {
+                const jsonString = responseText.replace(/```json|```/g, '').trim();
+                parsedResponse = JSON.parse(jsonString);
+            }
         } catch (parseError) {
             console.error("AI Response was not valid JSON:", responseText);
             parsedResponse = {

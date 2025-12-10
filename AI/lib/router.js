@@ -1,4 +1,4 @@
-import { routerModel } from './aiClient.js';
+import { routerModel, aiProvider } from './aiClient.js';
 import {parseGeminiResponse} from "./utils.js";
 
 export async function routeIntent(prompt) {
@@ -17,5 +17,16 @@ Message: "${prompt}"
     const response = await result.response;
     const text = response.text();
 
-    return parseGeminiResponse(text);
+    // Use appropriate parser based on provider
+    if (aiProvider === 'claude') {
+        try {
+            const jsonString = text.replace(/```json|```/g, '').trim();
+            return JSON.parse(jsonString);
+        } catch (parseError) {
+            console.error("Failed to parse AI response as JSON:", text);
+            throw new Error("AI generated an invalid response.");
+        }
+    } else {
+        return parseGeminiResponse(text);
+    }
 }

@@ -5,13 +5,18 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./server.js",
-    "start": "node ./server.js"
+    "start": "node ./server.js",
+    "test:claude": "node test-claude.js",
+    "test:backend": "node test-backend-claude.js",
+    "test:gemini": "node test-gemini-rotation.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.62",
+    "@anthropic-ai/sdk": "^0.24.1",
     "@fastify/cors": "^11.1.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.12.2",

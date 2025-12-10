@@ -1,4 +1,4 @@
-import { commandModel } from './aiClient.js';
+import { commandModel, aiProvider } from './aiClient.js';
 
 export async function handleConversation(prompt, intent) {
     const conversationalPrompt = `
@@ -10,8 +10,6 @@ You are Milo, a helpful Sui blockchain assistant.
 
 # USER'S MESSAGE:
 "${prompt}"
-
-Provide an appropriate response. If greeting, make it friendly and inviting. If question, be informative.
 `;
 
     const result = await commandModel.generateContent(conversationalPrompt);
